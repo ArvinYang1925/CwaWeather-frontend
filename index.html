@@ -68,6 +68,16 @@
             transform: rotate(-2deg);
             border: 2px solid white;
             box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            outline: none;
+        }
+
+        .location-pill:hover {
+            background: var(--ac-yellow);
+            filter: brightness(1.05);
         }
 
         .update-pill {
@@ -264,7 +274,30 @@
         <p style="color: white; font-weight: bold; margin-top: 20px;">正在觀測雲的流動...</p>
     </div>
     <div class="status-bar">
-        <div class="location-pill">📍 高雄</div>
+        <select id="citySelector" class="location-pill">
+            <option value="臺北市">📍 臺北市</option>
+            <option value="新北市">📍 新北市</option>
+            <option value="桃園市">📍 桃園市</option>
+            <option value="臺中市">📍 臺中市</option>
+            <option value="臺南市" selected>📍 臺南市</option>
+            <option value="高雄市">📍 高雄市</option>
+            <option value="基隆市">📍 基隆市</option>
+            <option value="新竹市">📍 新竹市</option>
+            <option value="嘉義市">📍 嘉義市</option>
+            <option value="新竹縣">📍 新竹縣</option>
+            <option value="苗栗縣">📍 苗栗縣</option>
+            <option value="彰化縣">📍 彰化縣</option>
+            <option value="南投縣">📍 南投縣</option>
+            <option value="雲林縣">📍 雲林縣</option>
+            <option value="嘉義縣">📍 嘉義縣</option>
+            <option value="屏東縣">📍 屏東縣</option>
+            <option value="宜蘭縣">📍 宜蘭縣</option>
+            <option value="花蓮縣">📍 花蓮縣</option>
+            <option value="臺東縣">📍 臺東縣</option>
+            <option value="澎湖縣">📍 澎湖縣</option>
+            <option value="金門縣">📍 金門縣</option>
+            <option value="連江縣">📍 連江縣</option>
+        </select>
         <div id="updateTime" class="update-pill">更新中...</div>
     </div>
 
@@ -280,7 +313,15 @@
     </div>
 
     <script>
-        const API_URL = "https://arvin-cwa.zeabur.app/api/weather/kaohsiung";
+        const citys = [
+            "臺北市", "新北市", "桃園市", "臺中市", "臺南市", "高雄市",
+            "基隆市", "新竹市", "嘉義市",
+            "新竹縣", "苗栗縣", "彰化縣", "南投縣", "雲林縣", "嘉義縣",
+            "屏東縣", "宜蘭縣", "花蓮縣", "臺東縣", "澎湖縣", "金門縣", "連江縣"
+        ];
+
+        let currentCity = "臺南市";
+        const API_URL = `https://arvin-cwa.zeabur.app/api/weather/city?cityName=${currentCity}`;
 
         function getWeatherIcon(weather) {
             if (!weather) return "🌤️";
@@ -394,20 +435,15 @@
 
         async function fetchWeather() {
             try {
-                // 1. 定義「最低等待時間」：1500 毫秒 (1.5秒)
                 const delayPromise = new Promise(resolve => setTimeout(resolve, 1500));
+                const apiUrl = `https://arvin-cwa.zeabur.app/api/weather/city?cityName=${currentCity}`;
+                const fetchPromise = fetch(apiUrl).then(res => res.json());
 
-                // 2. 定義「抓取資料」的工作
-                const fetchPromise = fetch(API_URL).then(res => res.json());
-
-                // 3. Promise.all 會等待「兩個都完成」才會往下走
-                // result 陣列裡，第一個是 delay 的結果(沒用到)，第二個是 api 的 json 資料
                 const [_, json] = await Promise.all([delayPromise, fetchPromise]);
 
                 if (json.success) {
                     renderWeather(json.data);
 
-                    // 資料處理好後，隱藏 Loading，顯示主畫面
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('mainContent').style.display = 'block';
                 } else {
@@ -419,7 +455,18 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", fetchWeather);
+        // 監聽縣市選擇變更
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchWeather();
+
+            const citySelector = document.getElementById('citySelector');
+            citySelector.addEventListener('change', (e) => {
+                currentCity = e.target.value;
+                document.getElementById('loading').style.display = 'flex';
+                document.getElementById('mainContent').style.display = 'none';
+                fetchWeather();
+            });
+        });
     </script>
 </body>
 
